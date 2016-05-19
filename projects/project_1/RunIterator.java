@@ -39,8 +39,8 @@ public class RunIterator implements Iterator {
    *  These variables MUST be private.
    */
 
-
-
+private DListNode pointer;
+private DList decode;
 
   /**
    *  RunIterator() constructs a new iterator starting with a specified run.
@@ -56,8 +56,10 @@ public class RunIterator implements Iterator {
   // constructor that you want so that your RunLengthEncoding.iterator()
   // implementation can construct a RunIterator that points to the first run of
   // the encoding.
-  RunIterator() {
+  RunIterator(DList list) {
     // Your solution here.  You may add parameters to the method signature.
+	  decode=list;
+	pointer=decode.head;
   }
 
   /**
@@ -68,7 +70,11 @@ public class RunIterator implements Iterator {
    */
   public boolean hasNext() {
     // Replace the following line with your solution.
-    return false;
+	  if(pointer==null){
+		  return false;
+	  }
+	  return true;
+	  
   }
 
   /**
@@ -97,8 +103,15 @@ public class RunIterator implements Iterator {
     // Don't forget to advance the RunIterator's pointer so that the next
     // call to next() will return the subsequent run.
 
-    // Replace the following line with your solution.
-    return new int[4];
+    int[] run=new int[4];
+    run[0]=this.pointer.value[0];//no of runs
+    run[1]=this.pointer.value[1];
+    run[2]=this.pointer.value[2];
+    run[3]=this.pointer.value[3];
+	  
+	 this.pointer=this.pointer.next; 
+    return run;
+    
   }
 
   /**

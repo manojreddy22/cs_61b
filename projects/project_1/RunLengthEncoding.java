@@ -23,6 +23,7 @@ package projects.project_1;
  *  See the README file accompanying this project for additional details.
  */
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 public class RunLengthEncoding implements Iterable {
@@ -31,8 +32,9 @@ public class RunLengthEncoding implements Iterable {
    *  Define any variables associated with a RunLengthEncoding object here.
    *  These variables MUST be private.
    */
-
-
+private PixImage pixImage;
+private DList encoding;
+private int width,height;
 
 
   /**
@@ -50,6 +52,14 @@ public class RunLengthEncoding implements Iterable {
 
   public RunLengthEncoding(int width, int height) {
     // Your solution here.
+	  this.width=width;
+	  this.height=height;
+	  
+	encoding=new DList();
+	int[] value=new int[]{
+			width*height,0,0,0	
+	};
+	encoding.insertFront(value);
   }
 
   /**
@@ -76,6 +86,28 @@ public class RunLengthEncoding implements Iterable {
   public RunLengthEncoding(int width, int height, int[] red, int[] green,
                            int[] blue, int[] runLengths) {
     // Your solution here.
+	  this.width=width;
+	  this.height=height;
+	  
+	  //checking error
+	  int len=red.length;
+	  int runSum=0;
+	  for (int i = 0; i < runLengths.length; i++) {
+		runSum+=runLengths[i];
+	}
+	  if(len!=green.length||len!=blue.length||len!=runLengths.length||runSum!=(width*height)){
+		  System.exit(0);
+	  }
+	  
+	  
+	  encoding=new DList();
+	  for (int i = 0; i < len; i++) {
+		  int value[]=new int[]{
+				  runLengths[i],red[i],green[i],blue[i]
+		  };
+		encoding.insertFront(value);
+	}
+	  
   }
 
   /**
@@ -87,7 +119,7 @@ public class RunLengthEncoding implements Iterable {
 
   public int getWidth() {
     // Replace the following line with your solution.
-    return 1;
+    return this.width;
   }
 
   /**
@@ -98,7 +130,7 @@ public class RunLengthEncoding implements Iterable {
    */
   public int getHeight() {
     // Replace the following line with your solution.
-    return 1;
+    return this.height;
   }
 
   /**
@@ -109,8 +141,8 @@ public class RunLengthEncoding implements Iterable {
    *  RunLengthEncoding.
    */
   public RunIterator iterator() {
-    // Replace the following line with your solution.
-    return null;
+    RunIterator rit=new RunIterator(this.encoding);
+    return rit;
     // You'll want to construct a new RunIterator, but first you'll need to
     // write a constructor in the RunIterator class.
   }
@@ -123,7 +155,36 @@ public class RunLengthEncoding implements Iterable {
    */
   public PixImage toPixImage() {
     // Replace the following line with your solution.
-    return new PixImage(1, 1);
+	  int width=this.width;
+	  int height=this.height;
+	  int len=width*height;
+	  int index=0;
+	  pixImage=new PixImage(width,height);
+	  short[] red=new short[len];
+	  short[] green=new short[len];
+	  short[] blue=new short[len];
+	  int run[]=new int[4];
+	  
+	  RunIterator runIt=this.iterator();
+	  while(runIt.hasNext()){
+		  run=runIt.next();
+		  for(int i=0;i<run[0];i++){
+			  red[index]=(short)run[1];
+			  green[index]=(short)run[2];
+			  blue[index]=(short)run[3];
+			  index++;
+		  }
+	  }
+	  int indx=0;
+	  for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			pixImage.setPixel(j, i, red[indx], green[indx], blue[indx]);
+			indx++;
+		}
+	}
+	  
+	  
+    return pixImage;
   }
 
   /**
@@ -157,7 +218,47 @@ public class RunLengthEncoding implements Iterable {
   public RunLengthEncoding(PixImage image) {
     // Your solution here, but you should probably leave the following line
     // at the end.
-    check();
+	  int width=image.getWidth();
+	  int height=image.getHeight();
+	  int index =0;
+	  System.out.println(width+height);
+	  short[] red=new short[width*height];
+	  short[] green=new short[width*height];
+	  short[] blue=new short[width*height];
+	  int[] rgb=new int[width*height];
+	  
+	  
+	 for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			red[index]=image.getRed(j, i);
+			green[index]=image.getGreen(j, i);
+			blue[index]=image.getBlue(j, i);
+			rgb[index]=((red[index]<<16)|(green[index<<32])|(green[index<<48]));
+			index++;
+			
+		}
+	}
+	 
+	 
+	 encoding=new DList();
+	 int runs=0;
+	 rgb[index+1]=-1;
+	 int value[]=new int[4];
+	 for (int i = 0; i <index; i++) {
+		 
+		if(rgb[i]!=rgb[i+1]){
+			runs++;
+			value[0]=runs;
+			value[1]=red[i];
+			value[2]=green[i];
+			value[3]=blue[i];
+			encoding.insertFront(value);
+			runs=0;
+		}
+		else
+			runs++;
+	}
+	 check();
   }
 
   /**
@@ -165,9 +266,31 @@ public class RunLengthEncoding implements Iterable {
    *  if two consecutive runs have the same RGB intensities, or if the sum of
    *  all run lengths does not equal the number of pixels in the image.
    */
-  public void check() {
+  public void check()  {
     // Your solution here.
-  }
+	int sum=0;
+	RunIterator check=iterator();
+	
+	while(check.hasNext()){
+		
+		int[] arr=check.next();
+		sum+=arr[0];
+		int[] nextArr=check.next();
+		
+		
+		if(sum!=(this.width*this.height)){
+			System.out.println("ERROR: sum of lengths not equal to no of pixels");
+		}
+		
+		if(Arrays.equals(arr,nextArr)){
+			System.out.println("adjacent runs have same rgb");
+		}
+			
+		}
+	}
+	 
+	  
+  
 
 
   /**
@@ -190,6 +313,8 @@ public class RunLengthEncoding implements Iterable {
   public void setPixel(int x, int y, short red, short green, short blue) {
     // Your solution here, but you should probably leave the following line
     //   at the end.
+	  
+	  
     check();
   }
 
@@ -260,7 +385,7 @@ public class RunLengthEncoding implements Iterable {
    * main() runs a series of tests of the run-length encoding code.
    */
   public static void main(String[] args) {
-    // Be forwarned that when you write arrays directly in Java as below,
+    // Be forwarded that when you write arrays directly in Java as below,
     // each "row" of text is a column of your image--the numbers get
     // transposed.
     PixImage image1 = array2PixImage(new int[][] { { 0, 3, 6 },
